@@ -1,24 +1,26 @@
 # register_allocator.py
 # Step 3: IR temporaries -> Physical Registers (Linear Scan)
 #
-# Operator aliases are resolved at the register layer (not in grammar):
-#   '+' -> 'Add'
-#   '-' -> 'Sub'
-#   '*' -> 'Mul'
-#   '/' -> 'Div'
+# Operator aliases are resolved at the register layer (not in grammar).
+# Alias mappings are loaded from operator_contract.yaml.
+
+import os
+import yaml
 
 from ir_generator import IRInstr, IRGenerator
 from arithmetic_parser import tokenize, Parser
 
 PHYSICAL_REGS = ['R0', 'R1', 'R2', 'R3']
 
-# Operator symbol -> mnemonic alias (applied at register/code-gen layer)
-OP_ALIAS: dict = {
-    '+': 'Add',
-    '-': 'Sub',
-    '*': 'Mul',
-    '/': 'Div',
-}
+# Load operator alias contract from YAML
+_CONTRACT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'operator_contract.yaml')
+
+def _load_op_alias(path: str) -> dict:
+    with open(path, 'r', encoding='utf-8') as f:
+        contract = yaml.safe_load(f)
+    return {entry['symbol']: entry['alias'] for entry in contract['operators']}
+
+OP_ALIAS: dict = _load_op_alias(_CONTRACT_PATH)
 
 
 def compute_liveness(instrs: list) -> dict:

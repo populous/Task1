@@ -1,0 +1,29 @@
+# operator_contract.yaml
+# ============================================================
+# Operator Alias Contract
+# 연산자 심볼 -> 레지스터 계층 mnemonic alias 매핑 계약
+#
+# 규칙:
+#   - grammar 또는 IR 계층은 이 파일을 참조하지 않는다.
+#   - register_allocator.py 가 이 파일을 읽어 alias를 적용한다.
+#   - 새 alias 추가/변경은 이 파일만 수정하면 된다.
+# ============================================================
+
+version: "1.0"
+
+operators:
+  - symbol: "+"
+    alias: "Add"
+    description: "덧셈 (addition)"
+
+  - symbol: "-"
+    alias: "Sub"
+    description: "뺄셈 (subtraction)"
+
+  - symbol: "*"
+    alias: "Mul"
+    description: "곱셈 (multiplication)"
+
+  - symbol: "/"
+    alias: "Div"
+    description: "나눗셈 (division)"
