@@ -1,10 +1,24 @@
 # register_allocator.py
 # Step 3: IR temporaries -> Physical Registers (Linear Scan)
+#
+# Operator aliases are resolved at the register layer (not in grammar):
+#   '+' -> 'Add'
+#   '-' -> 'Sub'
+#   '*' -> 'Mul'
+#   '/' -> 'Div'
 
 from ir_generator import IRInstr, IRGenerator
 from arithmetic_parser import tokenize, Parser
 
 PHYSICAL_REGS = ['R0', 'R1', 'R2', 'R3']
+
+# Operator symbol -> mnemonic alias (applied at register/code-gen layer)
+OP_ALIAS: dict = {
+    '+': 'Add',
+    '-': 'Sub',
+    '*': 'Mul',
+    '/': 'Div',
+}
 
 
 def compute_liveness(instrs: list) -> dict:
@@ -67,13 +81,19 @@ class RegisterAllocator:
 
 
 def apply_allocation(instrs: list, alloc: dict) -> list:
+    """
+    Rewrite IR instructions with physical register names.
+    Operator symbols are replaced by their mnemonic aliases (OP_ALIAS)
+    at this register layer — the grammar remains unchanged.
+    """
     result = []
     for instr in instrs:
         dest = alloc.get(instr.result, instr.result)
         a1   = alloc.get(instr.arg1,   instr.arg1) if instr.arg1 else ''
         a2   = alloc.get(instr.arg2,   instr.arg2) if instr.arg2 else ''
         if instr.op:
-            result.append(f"{dest} = {a1} {instr.op} {a2}")
+            alias = OP_ALIAS.get(instr.op, instr.op)   # resolve alias
+            result.append(f"{dest} = {alias}({a1}, {a2})")
         else:
             result.append(f"{dest} = {a1}")
     return result
@@ -93,10 +113,14 @@ if __name__ == '__main__':
     allocator = RegisterAllocator(PHYSICAL_REGS)
     alloc = allocator.allocate(gen.instrs)
 
+    print(f"\nOperator aliases (register layer):")
+    for sym, alias in OP_ALIAS.items():
+        print(f"  '{sym}'  ->  {alias}")
+
     print("\nTemp -> Register mapping:")
     for temp, reg in alloc.items():
         print(f"  {temp:4s} -> {reg}")
 
-    print("\nAllocated IR:")
+    print("\nAllocated IR (with aliases):")
     for line in apply_allocation(gen.instrs, alloc):
         print(" ", line)
