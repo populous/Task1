@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "operators": [
+    {
+      "symbol": "+",
+      "alias": "Add",
+      "description": "덧셈 (addition)"
+    },
+    {
+      "symbol": "-",
+      "alias": "Sub",
+      "description": "뺄셈 (subtraction)"
+    },
+    {
+      "symbol": "*",
+      "alias": "Mul",
+      "description": "곱셈 (multiplication)"
+    },
+    {
+      "symbol": "/",
+      "alias": "Div",
+      "description": "나눗셈 (division)"
+    }
+  ]
+}

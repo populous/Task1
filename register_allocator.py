@@ -5,6 +5,7 @@
 # Alias mappings are loaded from operator_contract.yaml.
 
 import os
+import json
 import yaml
 
 from ir_generator import IRInstr, IRGenerator
@@ -12,15 +13,21 @@ from arithmetic_parser import tokenize, Parser
 
 PHYSICAL_REGS = ['R0', 'R1', 'R2', 'R3']
 
-# Load operator alias contract from YAML
-_CONTRACT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'operator_contract.yaml')
+# Load operator alias contract — JSON preferred, YAML as fallback
+_DIR = os.path.dirname(os.path.abspath(__file__))
+_CONTRACT_JSON = os.path.join(_DIR, 'operator_contract.json')
+_CONTRACT_YAML = os.path.join(_DIR, 'operator_contract.yaml')
 
-def _load_op_alias(path: str) -> dict:
-    with open(path, 'r', encoding='utf-8') as f:
-        contract = yaml.safe_load(f)
+def _load_op_alias(json_path: str, yaml_path: str) -> dict:
+    if os.path.exists(json_path):
+        with open(json_path, 'r', encoding='utf-8') as f:
+            contract = json.load(f)
+    else:
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            contract = yaml.safe_load(f)
     return {entry['symbol']: entry['alias'] for entry in contract['operators']}
 
-OP_ALIAS: dict = _load_op_alias(_CONTRACT_PATH)
+OP_ALIAS: dict = _load_op_alias(_CONTRACT_JSON, _CONTRACT_YAML)
 
 
 def compute_liveness(instrs: list) -> dict:
