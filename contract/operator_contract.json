@@ -1,28 +1,90 @@
 {
-  "version": "2.0",
+  "version": "3.0",
   "operators": [
     {
       "symbol": "+",
+      "reg_type": "INT",
       "aliases": ["Add", "Plus"],
+      "arity": 2,
       "description": "덧셈 (addition)"
     },
     {
       "symbol": "-",
+      "reg_type": "INT",
       "aliases": ["Sub", "Minus"],
+      "arity": 2,
       "description": "뺄셈 (subtraction)"
     },
     {
       "symbol": "*",
+      "reg_type": "INT",
       "aliases": ["Mul", "Times"],
+      "arity": 2,
       "description": "곱셈 (multiplication)"
     },
     {
       "symbol": "/",
+      "reg_type": "INT",
       "aliases": ["Div", "Over"],
+      "arity": 2,
       "description": "나눗셈 (division)"
     }
   ],
+  "functions": [
+    {
+      "name": "sin",
+      "reg_type": "FLOAT",
+      "aliases": ["Sin"],
+      "arity": 1,
+      "description": "사인 함수"
+    },
+    {
+      "name": "cos",
+      "reg_type": "FLOAT",
+      "aliases": ["Cos"],
+      "arity": 1,
+      "description": "코사인 함수"
+    },
+    {
+      "name": "max",
+      "reg_type": "CALL",
+      "aliases": ["Max"],
+      "arity": 2,
+      "description": "최댓값 함수"
+    },
+    {
+      "name": "min",
+      "reg_type": "CALL",
+      "aliases": ["Min"],
+      "arity": 2,
+      "description": "최솟값 함수"
+    },
+    {
+      "name": "pow",
+      "reg_type": "CALL",
+      "aliases": ["Pow"],
+      "arity": 2,
+      "description": "거듭제곱 함수"
+    }
+  ],
+  "register_banks": {
+    "INT":   ["R0", "R1", "R2", "R3"],
+    "FLOAT": ["F0", "F1", "F2", "F3"],
+    "CALL":  ["C0", "C1"],
+    "ADDR":  ["A0", "A1"]
+  },
+  "spill_prefix": "MEM",
   "changelog": [
+    {
+      "version": "3.0",
+      "date": "2026-08-25",
+      "changes": [
+        "reg_type 필드 추가 (INT / FLOAT / CALL / ADDR)",
+        "functions 섹션 추가 (sin, cos, max, min, pow)",
+        "register_banks 섹션 추가 (유형별 물리 레지스터 풀)",
+        "arity 필드 추가 (문법 제약용)"
+      ]
+    },
     {
       "version": "2.0",
       "date": "2026-08-25",
