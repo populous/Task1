@@ -1,19 +1,21 @@
 # arithmetic_parser.py
-# Step 1: Grammar -> AST for four arithmetic operations (+ - * /)
+# Step 1: Grammar -> AST for four arithmetic operations (+ - * /) + function calls
 
 import re
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, List
 
 TOKEN_SPEC = [
-    ('NUMBER', r'\d+(\.\d*)?'),
-    ('PLUS',   r'\+'),
-    ('MINUS',  r'-'),
-    ('MUL',    r'\*'),
-    ('DIV',    r'/'),
-    ('LPAREN', r'\('),
-    ('RPAREN', r'\)'),
-    ('SKIP',   r'[ \t]+'),
+    ('NUMBER',    r'\d+(\.\d*)?'),
+    ('FUNC_NAME', r'[a-z][a-zA-Z0-9_]*'),   # function name (letter-first identifier)
+    ('PLUS',      r'\+'),
+    ('MINUS',     r'-'),
+    ('MUL',       r'\*'),
+    ('DIV',       r'/'),
+    ('LPAREN',    r'\('),
+    ('RPAREN',    r'\)'),
+    ('COMMA',     r','),
+    ('SKIP',      r'[ \t]+'),
 ]
 TOKEN_RE = re.compile('|'.join(f'(?P<{n}>{p})' for n, p in TOKEN_SPEC))
 
@@ -48,11 +50,19 @@ class BinOp:
     right: Any
 
 
+@dataclass
+class FuncCall:
+    name: str
+    args: List[Any] = field(default_factory=list)
+
+
 # Parser (Recursive Descent)
 # Grammar:
-#   Expr   -> Term   (('+' | '-') Term)*
-#   Term   -> Factor (('*' | '/') Factor)*
-#   Factor -> '(' Expr ')' | NUMBER
+#   Expr     -> Term   (('+' | '-') Term)*
+#   Term     -> Factor (('*' | '/') Factor)*
+#   Factor   -> FuncCall | '(' Expr ')' | NUMBER
+#   FuncCall -> FUNC_NAME '(' ArgList? ')'
+#   ArgList  -> Expr (',' Expr)*
 
 class Parser:
     def __init__(self, tokens):
@@ -91,6 +101,8 @@ class Parser:
 
     def factor(self):
         tok = self.peek()
+        if tok.kind == 'FUNC_NAME':
+            return self.func_call()
         if tok.kind == 'NUMBER':
             self.pos += 1
             return Num(float(tok.value))
@@ -101,12 +113,30 @@ class Parser:
             return node
         raise SyntaxError(f"Unexpected token: {tok}")
 
+    def func_call(self):
+        name_tok = self.consume('FUNC_NAME')
+        self.consume('LPAREN')
+        args = []
+        if self.peek().kind != 'RPAREN':
+            args.append(self.expr())
+            while self.peek().kind == 'COMMA':
+                self.consume('COMMA')
+                args.append(self.expr())
+        self.consume('RPAREN')
+        return FuncCall(name_tok.value, args)
+
 
 if __name__ == '__main__':
     import pprint
-    expr = "(3 + 5) * 2 - 8 / 4"
-    tokens = tokenize(expr)
-    ast = Parser(tokens).parse()
-    print("Expression:", expr)
-    print("AST:")
-    pprint.pprint(ast)
+    for expr in [
+        "(3 + 5) * 2 - 8 / 4",
+        "sin(30)",
+        "max(3 + 1, 2 * 5)",
+        "pow(2, 10) + 1",
+    ]:
+        tokens = tokenize(expr)
+        ast = Parser(tokens).parse()
+        print("Expression:", expr)
+        print("AST:")
+        pprint.pprint(ast)
+        print()

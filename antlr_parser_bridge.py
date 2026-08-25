@@ -1,6 +1,6 @@
 # antlr_parser_bridge.py
 # Step 1 (ANTLR 버전): Arithmetic.g4 로부터 생성된 파서를 사용하여
-# 4칙연산 수식을 AST(BinOp/Num)로 변환한다.
+# 4칙연산 + 함수 호출 수식을 AST(BinOp/Num/FuncCall)로 변환한다.
 #
 # ── 사전 준비 ──────────────────────────────────────────────────
 # 1) ANTLR4 jar 다운로드:
@@ -15,8 +15,8 @@
 # ──────────────────────────────────────────────────────────────
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, List
 
 
 # ── AST Nodes (arithmetic_parser.py 와 동일) ───────────────────
@@ -29,6 +29,11 @@ class BinOp:
     op: str
     left: Any
     right: Any
+
+@dataclass
+class FuncCall:
+    name: str
+    args: List[Any] = field(default_factory=list)
 
 
 # ── Visitor: Parse Tree → AST ──────────────────────────────────
@@ -49,7 +54,7 @@ def build_ast_visitor():
         )
 
     class ASTBuilder(ArithmeticVisitor):
-        """ANTLR parse tree를 BinOp/Num AST로 변환하는 Visitor."""
+        """ANTLR parse tree를 BinOp/Num/FuncCall AST로 변환하는 Visitor."""
 
         def visitProgram(self, ctx):
             return self.visit(ctx.expr())
@@ -70,11 +75,26 @@ def build_ast_visitor():
                 node = BinOp(op, node, self.visit(ctx.factor(i)))
             return node
 
+        def visitFuncCallExpr(self, ctx):
+            return self.visit(ctx.funcCall())
+
         def visitParenExpr(self, ctx):
             return self.visit(ctx.expr())
 
         def visitNumber(self, ctx):
             return Num(float(ctx.NUMBER().getText()))
+
+        def visitFuncCall(self, ctx):
+            # funcCall : FUNC_NAME '(' argList? ')'
+            name = ctx.FUNC_NAME().getText()
+            args = []
+            if ctx.argList():
+                args = self.visit(ctx.argList())
+            return FuncCall(name, args)
+
+        def visitArgList(self, ctx):
+            # argList : expr (',' expr)*
+            return [self.visit(expr_ctx) for expr_ctx in ctx.expr()]
 
     return ASTBuilder
 
@@ -117,8 +137,14 @@ def parse(text: str):
 # ── Demo ───────────────────────────────────────────────────────
 if __name__ == '__main__':
     import pprint
-    expr = "(3 + 5) * 2 - 8 / 4"
-    ast  = parse(expr)
-    print(f"Expression : {expr}")
-    print("AST:")
-    pprint.pprint(ast)
+    for expr in [
+        "(3 + 5) * 2 - 8 / 4",
+        "sin(30)",
+        "max(3 + 1, 2 * 5)",
+        "pow(2, 10) + 1",
+    ]:
+        ast = parse(expr)
+        print(f"Expression : {expr}")
+        print("AST:")
+        pprint.pprint(ast)
+        print()

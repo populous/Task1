@@ -1,5 +1,5 @@
 (* ============================================================
-   EBNF Specification — Four Arithmetic Operations
+   EBNF Specification — Four Arithmetic Operations + Function Calls
    단방향(one-pass) 하향식 파서를 위한 문법 명세
    ============================================================
 
@@ -20,11 +20,23 @@ expr      = term , { ( '+' | '-' ) , term } ;
 
 term      = factor , { ( '*' | '/' ) , factor } ;
 
-factor    = '(' , expr , ')'
+(* factor now includes function-call syntax: name '(' arglist ')' *)
+factor    = func_call
+          | '(' , expr , ')'
           | number
           ;
 
+func_call = func_name , '(' , [ arg_list ] , ')' ;
+
+arg_list  = expr , { ',' , expr } ;
+
+func_name = letter , { letter | digit } ;
+
 number    = digit , { digit } , [ '.' , { digit } ] ;
+
+letter    = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i'
+          | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r'
+          | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' ;
 
 digit     = '0' | '1' | '2' | '3' | '4'
           | '5' | '6' | '7' | '8' | '9' ;
@@ -34,9 +46,17 @@ digit     = '0' | '1' | '2' | '3' | '4'
     1. '+' '-'    (expr level)
     2. '*' '/'    (term level)
     3. '(' ')'    (factor level — explicit grouping)
+    4. func_call  (factor level — higher than binary ops)
+
+  Function call examples:
+    sin(x)          -- one argument
+    max(a, b)       -- two arguments
+    pow(2, 10)      -- numeric arguments
+    abs(3 + -1)     -- expression argument
 
   This grammar is:
     - LL(1)  : one token lookahead is sufficient
+               (FUNC_NAME token is distinguishable from NUMBER by first char)
     - left-recursive free : repetition replaces left recursion
     - unambiguous : operator precedence encoded in hierarchy
 *)
