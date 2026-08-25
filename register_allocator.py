@@ -6,6 +6,7 @@
 
 import os
 import json
+import logging
 import yaml
 
 from ir_generator import IRInstr, IRGenerator
@@ -73,7 +74,7 @@ class RegisterAllocator:
         slot = f"MEM[{self.spill_slot}]"
         self.spill_slot += 1
         self.allocation[victim] = slot
-        print(f"  !! SPILL {victim} from {reg} -> {slot}")
+        logging.debug("SPILL %s from %s -> %s", victim, reg, slot)
         return reg
 
     def allocate(self, instrs: list) -> dict:

@@ -142,6 +142,7 @@ class BasePipeline(ABC):
         bytecode      = self.emitter.serialize()
         return PipelineResult(
             source=source,
+            tokens=tokens,
             ast=ast,
             ir=ir,
             allocated_ir=allocated_ir,
@@ -160,12 +161,14 @@ class PipelineResult:
     def __init__(
         self,
         source: str,
+        tokens: List[Any],
         ast: Any,
         ir: List[Any],
         allocated_ir: List[str],
         bytecode: str,
     ):
         self.source       = source
+        self.tokens       = tokens
         self.ast          = ast
         self.ir           = ir
         self.allocated_ir = allocated_ir
@@ -173,7 +176,8 @@ class PipelineResult:
 
     def display(self) -> None:
         """파이프라인 각 단계의 결과를 단계별로 출력한다."""
-        print(f"[Stage 0] Source      : {self.source}")
+        print(f"[Stage 1] Source      : {self.source}")
+        print(f"[Stage 1] Tokens      : {[t.kind for t in self.tokens]}")
         print(f"[Stage 2] AST         : {self.ast}")
         print(f"[Stage 3] IR          :")
         for instr in self.ir:

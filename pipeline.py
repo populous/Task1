@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any, List, Optional
 
 from pipeline_abc import (
     BaseLexer,
@@ -80,7 +80,7 @@ class ArithmeticAllocator(BaseAllocator):
     레지스터 부족 시 메모리 스필(MEM[n])을 사용한다.
     """
 
-    def __init__(self, regs: List[str] = None):
+    def __init__(self, regs: Optional[List[str]] = None):
         self.regs = regs or list(PHYSICAL_REGS)
 
     def allocate(self, ir: List[Any]) -> List[str]:
@@ -125,7 +125,7 @@ class ArithmeticPipeline(BasePipeline):
         → [Emitter]   바이트코드
     """
 
-    def __init__(self, regs: List[str] = None):
+    def __init__(self, regs: Optional[List[str]] = None):
         super().__init__(
             lexer     = ArithmeticLexer(),
             parser    = ArithmeticParser(),
