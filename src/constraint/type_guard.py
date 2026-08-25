@@ -176,7 +176,8 @@ class TypeGuard:
             line = f"[{idx}] {instr}"
 
             # Use-Before-Def 검증
-            for arg in (instr.arg1, instr.arg2):
+            use_args = [instr.arg1, instr.arg2] + list(getattr(instr, 'extra_args', []))
+            for arg in use_args:
                 if arg and arg.startswith('t') and arg not in defined:
                     report.add(Violation(
                         stage='IR', level='ERROR',

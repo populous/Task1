@@ -28,11 +28,19 @@ class Token:
 
 def tokenize(text: str) -> list:
     tokens = []
+    pos = 0
     for m in TOKEN_RE.finditer(text):
+        if m.start() != pos:
+            unmatched = text[pos:m.start()]
+            raise SyntaxError(f"Unexpected character(s): {unmatched!r} at position {pos}")
+        pos = m.end()
         kind = m.lastgroup
         if kind == 'SKIP':
             continue
         tokens.append(Token(kind, m.group()))
+    if pos != len(text):
+        unmatched = text[pos:]
+        raise SyntaxError(f"Unexpected character(s): {unmatched!r} at position {pos}")
     tokens.append(Token('EOF', ''))
     return tokens
 

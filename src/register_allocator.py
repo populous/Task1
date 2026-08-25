@@ -9,7 +9,10 @@ import os
 import json
 import logging
 import sys
-import yaml
+try:
+    import yaml as _yaml
+except ImportError:
+    _yaml = None
 
 from ir_generator import IRInstr, IRGenerator
 from arithmetic_parser import tokenize, Parser
@@ -37,8 +40,10 @@ def _load_op_alias(json_path: str, yaml_path: str) -> dict:
         with open(json_path, 'r', encoding='utf-8') as f:
             contract = json.load(f)
     else:
+        if _yaml is None:
+            raise ImportError("PyYAML is required to load operator_contract.yaml")
         with open(yaml_path, 'r', encoding='utf-8') as f:
-            contract = yaml.safe_load(f)
+            contract = _yaml.safe_load(f)
     # Support both legacy 'alias' (str) and new 'aliases' (list); aliases[0] = primary
     result = {}
     for entry in contract['operators']:
@@ -63,7 +68,8 @@ def compute_liveness(instrs: list) -> dict:
             intervals[instr.result][0] = min(intervals[instr.result][0], idx)
 
         # uses
-        for arg in (instr.arg1, instr.arg2):
+        use_args = [instr.arg1, instr.arg2] + list(getattr(instr, 'extra_args', []))
+        for arg in use_args:
             if arg and arg.startswith('t'):
                 if arg not in intervals:
                     intervals[arg] = [idx, idx]
@@ -96,6 +102,10 @@ class RegisterAllocator:
 
     def _spill_one(self, intervals: dict) -> str:
         """Spill the temp whose interval ends latest."""
+        if not self.active:
+            slot = f"MEM[{self.spill_slot}]"
+            self.spill_slot += 1
+            return slot
         victim = max(self.active, key=lambda t: intervals[t][1])
         reg = self.active.pop(victim)
         slot = f"MEM[{self.spill_slot}]"
@@ -169,7 +179,11 @@ def apply_allocation(instrs: list, alloc: dict) -> list:
         dest = alloc.get(instr.result, instr.result)
         a1   = alloc.get(instr.arg1,   instr.arg1) if instr.arg1 else ''
         a2   = alloc.get(instr.arg2,   instr.arg2) if instr.arg2 else ''
-        if instr.op:
+        if instr.op == 'call':
+            extra = getattr(instr, 'extra_args', [])
+            mapped_args = ', '.join(alloc.get(a, a) for a in extra)
+            result.append(f"{dest} = {a1}({mapped_args})")
+        elif instr.op:
             alias = OP_ALIAS.get(instr.op, [instr.op])[0]   # aliases[0] = primary
             result.append(f"{dest} = {alias}({a1}, {a2})")
         else:

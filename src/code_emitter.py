@@ -80,12 +80,19 @@ class CodeEmitter:
         out = []
         for instr in self.instructions:
             if instr.opcode == 'PUSH':
-                assert 0 <= instr.operand <= 255, (
-                    f"PUSH operand {instr.operand} exceeds one-byte range; "
-                    "multi-byte PUSH encoding is not supported"
-                )
+                operand = instr.operand
+                if not isinstance(operand, int):
+                    raise TypeError(
+                        f"PUSH operand {operand!r} is not an integer; "
+                        "non-integer literals are not supported in single-byte encoding"
+                    )
+                if not (0 <= operand <= 255):
+                    raise ValueError(
+                        f"PUSH operand {operand} exceeds one-byte range; "
+                        "multi-byte PUSH encoding is not supported"
+                    )
                 out.append(f"{EVM['PUSH']:02x}")
-                out.append(f"{instr.operand:02x}")
+                out.append(f"{operand:02x}")
             elif instr.opcode == 'CALL':
                 out.append(f"{EVM['CALL']:02x}")
                 # encode function name as 1-byte length + ASCII bytes
