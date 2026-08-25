@@ -25,7 +25,14 @@ def _load_op_alias(json_path: str, yaml_path: str) -> dict:
     else:
         with open(yaml_path, 'r', encoding='utf-8') as f:
             contract = yaml.safe_load(f)
-    return {entry['symbol']: entry['alias'] for entry in contract['operators']}
+    # Support both legacy 'alias' (str) and new 'aliases' (list); aliases[0] = primary
+    result = {}
+    for entry in contract['operators']:
+        if 'aliases' in entry:
+            result[entry['symbol']] = entry['aliases']
+        else:
+            result[entry['symbol']] = [entry['alias']]
+    return result
 
 OP_ALIAS: dict = _load_op_alias(_CONTRACT_JSON, _CONTRACT_YAML)
 
@@ -101,7 +108,7 @@ def apply_allocation(instrs: list, alloc: dict) -> list:
         a1   = alloc.get(instr.arg1,   instr.arg1) if instr.arg1 else ''
         a2   = alloc.get(instr.arg2,   instr.arg2) if instr.arg2 else ''
         if instr.op:
-            alias = OP_ALIAS.get(instr.op, instr.op)   # resolve alias
+            alias = OP_ALIAS.get(instr.op, [instr.op])[0]   # aliases[0] = primary
             result.append(f"{dest} = {alias}({a1}, {a2})")
         else:
             result.append(f"{dest} = {a1}")
@@ -123,8 +130,8 @@ if __name__ == '__main__':
     alloc = allocator.allocate(gen.instrs)
 
     print(f"\nOperator aliases (register layer):")
-    for sym, alias in OP_ALIAS.items():
-        print(f"  '{sym}'  ->  {alias}")
+    for sym, aliases in OP_ALIAS.items():
+        print(f"  '{sym}'  ->  {aliases}  (primary: {aliases[0]})")
 
     print("\nTemp -> Register mapping:")
     for temp, reg in alloc.items():

@@ -6,24 +6,41 @@
 # 규칙:
 #   - grammar 또는 IR 계층은 이 파일을 참조하지 않는다.
 #   - register_allocator.py 가 이 파일을 읽어 alias를 적용한다.
+#   - aliases[0] 이 primary alias (코드 생성에 사용).
+#   - 나머지 aliases 는 동의어 (문서/검색 용도).
 #   - 새 alias 추가/변경은 이 파일만 수정하면 된다.
 # ============================================================
 
-version: "1.0"
+version: "2.0"
 
 operators:
   - symbol: "+"
-    alias: "Add"
+    aliases: ["Add", "Plus"]
     description: "덧셈 (addition)"
 
   - symbol: "-"
-    alias: "Sub"
+    aliases: ["Sub", "Minus"]
     description: "뺄셈 (subtraction)"
 
   - symbol: "*"
-    alias: "Mul"
+    aliases: ["Mul", "Times"]
     description: "곱셈 (multiplication)"
 
   - symbol: "/"
-    alias: "Div"
+    aliases: ["Div", "Over"]
     description: "나눗셈 (division)"
+
+# ============================================================
+# Changelog (버전 히스토리)
+# ============================================================
+changelog:
+  - version: "2.0"
+    date: "2026-08-25"
+    changes:
+      - "alias 필드를 aliases 배열로 확장"
+      - "+ 에 Plus, - 에 Minus, * 에 Times, / 에 Over 추가"
+
+  - version: "1.0"
+    date: "2026-08-25"
+    changes:
+      - "최초 생성: +→Add, -→Sub, *→Mul, /→Div"
