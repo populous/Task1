@@ -1,0 +1,42 @@
+(* ============================================================
+   EBNF Specification — Four Arithmetic Operations
+   단방향(one-pass) 하향식 파서를 위한 문법 명세
+   ============================================================
+
+   Notation (ISO/IEC 14977):
+     =   definition
+     ,   concatenation
+     |   alternation
+     [ ] optional (0 or 1)
+     { } repetition (0 or more)
+     ( ) grouping
+     '' terminal string
+     (* *) comment
+   ============================================================ *)
+
+program   = expr ;
+
+expr      = term , { ( '+' | '-' ) , term } ;
+
+term      = factor , { ( '*' | '/' ) , factor } ;
+
+factor    = '(' , expr , ')'
+          | number
+          ;
+
+number    = digit , { digit } , [ '.' , { digit } ] ;
+
+digit     = '0' | '1' | '2' | '3' | '4'
+          | '5' | '6' | '7' | '8' | '9' ;
+
+(*
+  Precedence (lowest → highest):
+    1. '+' '-'    (expr level)
+    2. '*' '/'    (term level)
+    3. '(' ')'    (factor level — explicit grouping)
+
+  This grammar is:
+    - LL(1)  : one token lookahead is sufficient
+    - left-recursive free : repetition replaces left recursion
+    - unambiguous : operator precedence encoded in hierarchy
+*)
